@@ -171,3 +171,8 @@ A solução é apresentada por meio de um **vídeo demonstrativo**, exibindo:
 O projeto atende integralmente aos requisitos propostos no Tech Challenge, demonstrando a aplicação prática de conceitos de **Cloud Computing**, **Serverless**, **Infraestrutura como Código**, **monitoramento** e **boas práticas de arquitetura**.
 
 ---
+
+**Autores**
+
+* José Franklin Miranda Gomes Leite RA 361614
+* Vitor Henrique dos Santos  RA 361617 
