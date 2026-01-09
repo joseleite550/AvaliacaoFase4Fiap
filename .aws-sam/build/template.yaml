@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "Sistema de Avalia\xE7\xE3o - Tech Challenge Fase 4"
+Resources:
+  FeedbacksTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Feedbacks
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+  IngestaoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: org.postech.challange.handler.IngestaoHandler::handleRequest
+      Runtime: java17
+      CodeUri: IngestaoFunction
+      MemorySize: 512
+      Timeout: 30
+      Tracing: Active
+      Environment:
+        Variables:
+          TABLE_NAME: Feedbacks
+          NOTIFICACAO_FUNCTION_NAME:
+            Ref: NotificacaoFunction
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: Feedbacks
+      - Statement:
+          Effect: Allow
+          Action:
+          - lambda:InvokeFunction
+          Resource:
+            Fn::GetAtt:
+            - NotificacaoFunction
+            - Arn
+      Events:
+        AvaliacaoApi:
+          Type: Api
+          Properties:
+            Path: /avaliacao
+            Method: POST
+    Metadata:
+      SamResourceId: IngestaoFunction
+  RelatorioFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: org.postech.challange.handler.RelatorioHandler::handleRequest
+      Runtime: java17
+      CodeUri: RelatorioFunction
+      MemorySize: 512
+      Timeout: 30
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName: Feedbacks
+      Events:
+        WeeklyTimer:
+          Type: Schedule
+          Properties:
+            Schedule: rate(7 days)
+    Metadata:
+      SamResourceId: RelatorioFunction
+  NotificacaoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: org.postech.challange.handler.NotificacaoHandler::handleRequest
+      Runtime: java17
+      CodeUri: NotificacaoFunction
+      MemorySize: 512
+      Timeout: 20
+      Policies:
+      - Statement:
+          Effect: Allow
+          Action:
+          - ses:SendEmail
+          Resource: '*'
+    Metadata:
+      SamResourceId: NotificacaoFunction
+Outputs:
+  ApiUrl:
+    Description: URL da API
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/avaliacao
